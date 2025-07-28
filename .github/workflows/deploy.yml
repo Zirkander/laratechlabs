@@ -18,7 +18,7 @@ jobs:
         username: deploy
         key: ${{ secrets.PRIVATE_KEY }}
         script: |
-          cd /var/www/your-domain
+          cd /var/www/laratechlabs.com
           git pull origin main
           # Add any build commands here if needed
           # npm install && npm run build
