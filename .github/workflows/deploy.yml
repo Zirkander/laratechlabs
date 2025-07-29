@@ -47,9 +47,17 @@ jobs:
           
     - name: Wait for security group rule to propagate
       run: |
-        echo "⏳ Waiting 10 seconds for rule to propagate..."
-        sleep 10
+        echo "⏳ Waiting 30 seconds for rule to propagate..."
+        sleep 30
         echo "✅ Wait complete"
+
+    - name: Test connection before SSH
+      run: |
+        echo "🧪 Testing connection to ${{ secrets.HOST }}:22..."
+        timeout 10 bash -c "</dev/tcp/${{ secrets.HOST }}/22" && echo "✅ Port 22 is reachable" || echo "❌ Port 22 is not reachable"
+        
+        echo "🔍 Checking if our IP was added correctly..."
+        aws ec2 describe-security-groups --group-ids ${{ secrets.SECURITY_GROUP_ID }} --query 'SecurityGroups[0].IpPermissions[?FromPort==`22`].IpRanges[?CidrIp==`${{ steps.ip.outputs.runner_ip }}/32`]'
       
     - name: Deploy to server
       uses: appleboy/ssh-action@v0.1.7
