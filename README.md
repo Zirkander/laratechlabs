@@ -1,12 +1,61 @@
-# React + Vite
+# LarATECH Labs
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, minimalist website for LarATECH Labs - Building the future, one innovation at a time.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Modern, edgy design with cyan accent colors
+- Responsive layout that works on all devices
+- Contact form with email functionality
+- Fast performance with optimized bundle size
+- Built with React and Vite
 
-## Expanding the ESLint configuration
+## Setup
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. Clone the repository:
+```bash
+git clone https://github.com/Zirkander/laratechlabs.git
+cd laratechlabs
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Set up email functionality (EmailJS):
+   - Sign up for a free account at [EmailJS](https://www.emailjs.com/)
+   - Create a new email service (Gmail, Outlook, etc.)
+   - Create an email template with these variables:
+     - `{{to_email}}` - Will be set to zirkander@lawrencecox.net
+     - `{{from_name}}` - Sender's full name
+     - `{{from_email}}` - Sender's email
+     - `{{message}}` - Message content
+     - `{{reply_to}}` - Reply-to email address
+   - Copy `.env.example` to `.env` and fill in your EmailJS credentials:
+     ```bash
+     cp .env.example .env
+     ```
+   - Update the `.env` file with your EmailJS values
+
+4. Run the development server:
+```bash
+npm run dev
+```
+
+## Deployment
+
+Build for production:
+```bash
+npm run build
+```
+
+The built files will be in the `dist` directory, ready to be deployed to AWS or any static hosting service.
+
+## Technologies Used
+
+- React
+- Vite
+- React Router
+- EmailJS for contact form
+- CSS with custom properties
