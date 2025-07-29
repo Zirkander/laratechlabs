@@ -11,15 +11,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-      
-    - name: Debug - Show secrets status
-      run: |
-        echo "Checking secrets..."
-        echo "AWS_ACCESS_KEY_ID exists: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}"
-        echo "AWS_SECRET_ACCESS_KEY exists: ${{ secrets.AWS_SECRET_ACCESS_KEY != '' }}"
-        echo "SECURITY_GROUP_ID exists: ${{ secrets.SECURITY_GROUP_ID != '' }}"
-        echo "HOST exists: ${{ secrets.HOST != '' }}"
-        echo "PRIVATE_KEY exists: ${{ secrets.PRIVATE_KEY != '' }}"
         
     - name: Configure AWS CLI
       uses: aws-actions/configure-aws-credentials@v2
@@ -33,7 +24,6 @@ jobs:
       run: |
         RUNNER_IP=$(curl -s https://checkip.amazonaws.com)
         echo "🔍 Runner IP: $RUNNER_IP"
-        echo "🔧 Security Group ID: ${{ secrets.SECURITY_GROUP_ID }}"
         echo "runner_ip=$RUNNER_IP" >> $GITHUB_OUTPUT
         
         echo "📝 Adding IP to security group..."
@@ -50,14 +40,11 @@ jobs:
         echo "⏳ Waiting 30 seconds for rule to propagate..."
         sleep 30
         echo "✅ Wait complete"
-
+        
     - name: Test connection before SSH
       run: |
         echo "🧪 Testing connection to ${{ secrets.HOST }}:22..."
         timeout 10 bash -c "</dev/tcp/${{ secrets.HOST }}/22" && echo "✅ Port 22 is reachable" || echo "❌ Port 22 is not reachable"
-        
-        echo "🔍 Checking if our IP was added correctly..."
-        aws ec2 describe-security-groups --group-ids ${{ secrets.SECURITY_GROUP_ID }} --query 'SecurityGroups[0].IpPermissions[?FromPort==`22`].IpRanges[?CidrIp==`${{ steps.ip.outputs.runner_ip }}/32`]'
       
     - name: Deploy to server
       uses: appleboy/ssh-action@v0.1.7
@@ -65,6 +52,8 @@ jobs:
         host: ${{ secrets.HOST }}
         username: deploy
         key: ${{ secrets.PRIVATE_KEY }}
+        timeout: 60s
+        command_timeout: 300s
         script: |
           cd /var/www/laratechlabs.com/laratechlabs
           git pull origin main
