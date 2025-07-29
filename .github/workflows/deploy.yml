@@ -42,7 +42,6 @@ jobs:
           --protocol tcp \
           --port 22 \
           --cidr ${RUNNER_IP}/32 \
-          --description "GitHub-Actions-$(date +%s)" \
           && echo "✅ Successfully added IP to security group" \
           || echo "❌ Failed to add IP to security group"
           
