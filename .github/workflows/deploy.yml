@@ -12,6 +12,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
       
+    - name: Debug - Show secrets status
+      run: |
+        echo "Checking secrets..."
+        echo "AWS_ACCESS_KEY_ID exists: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}"
+        echo "AWS_SECRET_ACCESS_KEY exists: ${{ secrets.AWS_SECRET_ACCESS_KEY != '' }}"
+        echo "SECURITY_GROUP_ID exists: ${{ secrets.SECURITY_GROUP_ID != '' }}"
+        echo "HOST exists: ${{ secrets.HOST != '' }}"
+        echo "PRIVATE_KEY exists: ${{ secrets.PRIVATE_KEY != '' }}"
+        
     - name: Configure AWS CLI
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -23,19 +32,25 @@ jobs:
       id: ip
       run: |
         RUNNER_IP=$(curl -s https://checkip.amazonaws.com)
-        echo "Runner IP: $RUNNER_IP"
+        echo "🔍 Runner IP: $RUNNER_IP"
+        echo "🔧 Security Group ID: ${{ secrets.SECURITY_GROUP_ID }}"
         echo "runner_ip=$RUNNER_IP" >> $GITHUB_OUTPUT
         
-        # Add runner IP to security group
+        echo "📝 Adding IP to security group..."
         aws ec2 authorize-security-group-ingress \
           --group-id ${{ secrets.SECURITY_GROUP_ID }} \
           --protocol tcp \
           --port 22 \
           --cidr ${RUNNER_IP}/32 \
-          --description "Temporary GitHub Actions access - $(date)"
+          --description "Temporary GitHub Actions access - $(date)" \
+          && echo "✅ Successfully added IP to security group" \
+          || echo "❌ Failed to add IP to security group"
           
     - name: Wait for security group rule to propagate
-      run: sleep 10
+      run: |
+        echo "⏳ Waiting 10 seconds for rule to propagate..."
+        sleep 10
+        echo "✅ Wait complete"
       
     - name: Deploy to server
       uses: appleboy/ssh-action@v0.1.7
@@ -54,8 +69,11 @@ jobs:
     - name: Remove runner IP from security group
       if: always()
       run: |
+        echo "🧹 Cleaning up security group rule..."
         aws ec2 revoke-security-group-ingress \
           --group-id ${{ secrets.SECURITY_GROUP_ID }} \
           --protocol tcp \
           --port 22 \
-          --cidr ${{ steps.ip.outputs.runner_ip }}/32 || echo "⚠️  Could not remove IP (may have been removed already)"
+          --cidr ${{ steps.ip.outputs.runner_ip }}/32 \
+          && echo "✅ Successfully removed IP from security group" \
+          || echo "⚠️ Could not remove IP (may have been removed already)"
