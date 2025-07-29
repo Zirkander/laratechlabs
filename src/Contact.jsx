@@ -75,7 +75,7 @@ function Contact() {
           ← Back
         </button>
         <div className="contact-content">
-          <h2 className="contact-title">Contact Us</h2>
+          <h2 className="contact-title" data-text="Contact Us">Contact Us</h2>
           <form className="contact-form" onSubmit={handleSubmit}>
             <div className="form-row">
               <div className="form-group">
