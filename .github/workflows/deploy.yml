@@ -9,15 +9,36 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Configure AWS CLI
+      uses: aws-actions/configure-aws-credentials@v2
       with:
-        node-version: '18'
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2
         
+    - name: Get runner IP and add to security group
+      id: ip
+      run: |
+        RUNNER_IP=$(curl -s https://checkip.amazonaws.com)
+        echo "Runner IP: $RUNNER_IP"
+        echo "runner_ip=$RUNNER_IP" >> $GITHUB_OUTPUT
+        
+        # Add runner IP to security group
+        aws ec2 authorize-security-group-ingress \
+          --group-id ${{ secrets.SECURITY_GROUP_ID }} \
+          --protocol tcp \
+          --port 22 \
+          --cidr ${RUNNER_IP}/32 \
+          --description "Temporary GitHub Actions access - $(date)"
+          
+    - name: Wait for security group rule to propagate
+      run: sleep 10
+      
     - name: Deploy to server
-      uses: appleboy/ssh-action@v0.1.5
+      uses: appleboy/ssh-action@v0.1.7
       with:
         host: ${{ secrets.HOST }}
         username: deploy
@@ -28,3 +49,13 @@ jobs:
           npm install
           npm run build
           sudo systemctl reload nginx
+          echo "✅ Deployment completed successfully!"
+          
+    - name: Remove runner IP from security group
+      if: always()
+      run: |
+        aws ec2 revoke-security-group-ingress \
+          --group-id ${{ secrets.SECURITY_GROUP_ID }} \
+          --protocol tcp \
+          --port 22 \
+          --cidr ${{ steps.ip.outputs.runner_ip }}/32 || echo "⚠️  Could not remove IP (may have been removed already)"
