@@ -14,7 +14,7 @@ function Home() {
         </div>
       </div>
       <footer className="footer">
-        <p>&copy; 2025 LarATECH Labs. All rights reserved. | v1.1</p>
+        <p>&copy; 2025 LarATECH Labs. All rights reserved.</p>
       </footer>
     </div>
   )
