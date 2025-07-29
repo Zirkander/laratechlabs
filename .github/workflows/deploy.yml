@@ -1,9 +1,7 @@
 name: Deploy to EC2
-
 on:
   push:
     branches: [ main ]
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -55,25 +53,39 @@ jobs:
         timeout: 60s
         command_timeout: 300s
         script: |
+          echo "🚀 Starting deployment..."
           cd /var/www/laratechlabs.com/laratechlabs
+          
+          echo "📥 Pulling latest code..."
           git pull origin main
+          
+          echo "📦 Installing dependencies..."
           npm install
+          
+          echo "🔨 Building project..."
           npm run build
           
-          # Copy nginx configuration
-          echo "📋 Updating nginx configuration..."
-          sudo cp nginx.conf /etc/nginx/sites-available/laratechlabs.com
-          sudo ln -sf /etc/nginx/sites-available/laratechlabs.com /etc/nginx/sites-enabled/
+          echo "📁 Checking build output..."
+          ls -la dist/
           
-          # Test nginx configuration
+          # Copy nginx configuration to Fedora location
+          echo "📋 Updating nginx configuration..."
+          if [ -f nginx.conf ]; then
+            sudo cp nginx.conf /etc/nginx/conf.d/laratechlabs.conf
+            echo "✅ Nginx config updated"
+          else
+            echo "⚠️ nginx.conf not found, skipping config update"
+          fi
+          
           echo "🔍 Testing nginx configuration..."
           sudo nginx -t
           
-          # Reload nginx
           echo "🔄 Reloading nginx..."
           sudo systemctl reload nginx
           
           echo "✅ Deployment completed successfully!"
+          echo "📊 Final dist/ contents:"
+          ls -la dist/
           
     - name: Remove runner IP from security group
       if: always()
