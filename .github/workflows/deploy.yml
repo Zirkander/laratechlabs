@@ -59,7 +59,20 @@ jobs:
           git pull origin main
           npm install
           npm run build
+          
+          # Copy nginx configuration
+          echo "📋 Updating nginx configuration..."
+          sudo cp nginx.conf /etc/nginx/sites-available/laratechlabs.com
+          sudo ln -sf /etc/nginx/sites-available/laratechlabs.com /etc/nginx/sites-enabled/
+          
+          # Test nginx configuration
+          echo "🔍 Testing nginx configuration..."
+          sudo nginx -t
+          
+          # Reload nginx
+          echo "🔄 Reloading nginx..."
           sudo systemctl reload nginx
+          
           echo "✅ Deployment completed successfully!"
           
     - name: Remove runner IP from security group
